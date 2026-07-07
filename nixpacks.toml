@@ -1,0 +1,10 @@
+# Railway builds this app with Nixpacks. Next.js itself needs zero extra
+# config (package.json's "build"/"start" scripts are picked up automatically),
+# but this app also depends on better-sqlite3, a native module. It ships
+# prebuilt binaries for most platforms, but if no matching prebuild is found
+# for the container's exact OS/arch/Node ABI, npm falls back to compiling it
+# from source with node-gyp — which needs python3 + a C toolchain that the
+# default Node provider image does not always include. Adding them here keeps
+# the build working in that fallback case, at basically no cost otherwise.
+[phases.setup]
+nixPkgs = ["...", "python3", "gcc", "make"]
