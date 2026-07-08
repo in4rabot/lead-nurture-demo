@@ -7,6 +7,22 @@ import { NextRequest, NextResponse } from "next/server";
 const FALLBACK_ADMIN_USER = "admin";
 const FALLBACK_ADMIN_PASSWORD = "Nurture#2026";
 
+// Constant-time string comparison. Iterates the full max length regardless
+// of where (or whether) a mismatch occurs, so response timing doesn't leak
+// how many leading characters of a guess were correct. Avoids Node's
+// crypto.timingSafeEqual since middleware runs on the Edge runtime (this
+// file already relies on the Web `atob` API, not Node's Buffer).
+function timingSafeEqual(a: string, b: string): boolean {
+  const maxLength = Math.max(a.length, b.length);
+  let mismatch = a.length === b.length ? 0 : 1;
+  for (let i = 0; i < maxLength; i++) {
+    const charA = i < a.length ? a.charCodeAt(i) : 0;
+    const charB = i < b.length ? b.charCodeAt(i) : 0;
+    mismatch |= charA ^ charB;
+  }
+  return mismatch === 0;
+}
+
 function unauthorized(): NextResponse {
   return new NextResponse("Authentication required.", {
     status: 401,
@@ -50,7 +66,10 @@ export function middleware(request: NextRequest): NextResponse {
   const user = decoded.slice(0, separatorIndex);
   const password = decoded.slice(separatorIndex + 1);
 
-  if (user !== expectedUser || password !== expectedPassword) {
+  const userMatches = timingSafeEqual(user, expectedUser);
+  const passwordMatches = timingSafeEqual(password, expectedPassword);
+
+  if (!userMatches || !passwordMatches) {
     return unauthorized();
   }
 
