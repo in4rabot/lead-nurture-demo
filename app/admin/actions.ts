@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { markFollowedUp } from "@/lib/db";
+import { markFollowedUp, deleteLead } from "@/lib/db";
 
 /**
  * Server Action: marks a lead as followed up, then revalidates the admin
@@ -9,5 +9,14 @@ import { markFollowedUp } from "@/lib/db";
  */
 export async function markLeadFollowedUp(id: number): Promise<void> {
   markFollowedUp(id);
+  revalidatePath("/admin");
+}
+
+/**
+ * Server Action: permanently removes a lead (spam/junk cleanup), then
+ * revalidates the admin dashboard.
+ */
+export async function removeLead(id: number): Promise<void> {
+  deleteLead(id);
   revalidatePath("/admin");
 }

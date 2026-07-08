@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAllLeads, type Lead } from "@/lib/db";
-import { markLeadFollowedUp } from "./actions";
+import { markLeadFollowedUp, removeLead } from "./actions";
 
 // This dashboard reads directly from the on-disk SQLite file and is mutated
 // via a Server Action (markLeadFollowedUp), so it must always render fresh —
@@ -259,20 +259,31 @@ function LeadRow({
         </span>
       </td>
       <td className="px-5 py-4 align-top">
-        {lead.followed_up ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-300">
-            Followed up
-          </span>
-        ) : (
-          <form action={markLeadFollowedUp.bind(null, lead.id)}>
+        <div className="flex items-center gap-2">
+          {lead.followed_up ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-300">
+              Followed up
+            </span>
+          ) : (
+            <form action={markLeadFollowedUp.bind(null, lead.id)}>
+              <button
+                type="submit"
+                className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                Mark followed up
+              </button>
+            </form>
+          )}
+          <form action={removeLead.bind(null, lead.id)}>
             <button
               type="submit"
-              className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              title="Remove this lead (spam/junk cleanup)"
+              className="inline-flex items-center rounded-lg px-2 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:text-slate-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
             >
-              Mark followed up
+              Remove
             </button>
           </form>
-        )}
+        </div>
       </td>
     </tr>
   );
@@ -301,10 +312,14 @@ function formatSubmitted(
   isoDate: string,
   daysSince: number
 ): { date: string; relative: string } {
+  // Render dates in a fixed display timezone rather than the server's (UTC on
+  // Railway), so a lead submitted tonight doesn't show tomorrow's date during
+  // a screen share. Override with DISPLAY_TZ for demos in other regions.
   const date = new Date(isoDate).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: process.env.DISPLAY_TZ || "America/Denver",
   });
 
   let relative: string;

@@ -33,7 +33,9 @@ export function getDb(): Database.Database {
     return dbInstance;
   }
 
-  const dataDir = path.join(process.cwd(), "data");
+  // DATA_DIR lets production point at a mounted persistent volume (e.g. a
+  // Railway volume at /data) so the database survives redeploys.
+  const dataDir = process.env.DATA_DIR || path.join(process.cwd(), "data");
   fs.mkdirSync(dataDir, { recursive: true });
 
   const dbPath = path.join(dataDir, "leads.db");
@@ -95,7 +97,7 @@ function seedDemoDataIfEmpty(db: Database.Database): void {
       interest: "Mobile App",
       created_at: daysAgoIso(1),
       followed_up: 0,
-      email_status: "sent",
+      email_status: "simulated",
     },
     {
       name: "Elena Torres",
@@ -104,7 +106,7 @@ function seedDemoDataIfEmpty(db: Database.Database): void {
       interest: "Automation / Workflow",
       created_at: daysAgoIso(2),
       followed_up: 1,
-      email_status: "sent",
+      email_status: "simulated",
     },
     {
       name: "David Okonkwo",
@@ -113,7 +115,7 @@ function seedDemoDataIfEmpty(db: Database.Database): void {
       interest: "Consulting",
       created_at: daysAgoIso(4),
       followed_up: 0,
-      email_status: "sent",
+      email_status: "simulated",
     },
     {
       name: "Hannah Lindqvist",
@@ -189,4 +191,13 @@ export function updateEmailStatus(id: number, status: string): void {
     status,
     id
   );
+}
+
+/**
+ * Permanently deletes a lead. Used by the admin dashboard to remove spam or
+ * junk submissions so they never appear in a client-facing demo.
+ */
+export function deleteLead(id: number): void {
+  const db = getDb();
+  db.prepare("DELETE FROM leads WHERE id = ?").run(id);
 }

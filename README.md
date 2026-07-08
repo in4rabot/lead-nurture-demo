@@ -47,8 +47,16 @@ and logged to the console instead).
 | --- | --- |
 | `RESEND_API_KEY` | Your [Resend](https://resend.com) API key. Leave blank to run in email-simulation mode — confirmation emails are logged to the console instead of actually sent, so the demo works with no third-party account. |
 | `RESEND_FROM_EMAIL` | The "from" address used for confirmation emails. Defaults to `onboarding@resend.dev`, Resend's shared sandbox sender, which works without verifying your own domain. |
-| `ADMIN_USER` | Username required by the Basic Auth prompt in front of `/admin`. |
-| `ADMIN_PASSWORD` | Password required by the Basic Auth prompt in front of `/admin`. |
+| `ADMIN_USER` | Username required by the Basic Auth prompt in front of `/admin`. **Required in production** — if unset there, `/admin` fails closed (always 401) rather than falling back to the development default. |
+| `ADMIN_PASSWORD` | Password required by the Basic Auth prompt in front of `/admin`. Same production fail-closed behavior as `ADMIN_USER`. |
+| `DATA_DIR` | Optional. Directory for the SQLite file. Point it at a mounted persistent volume in production (e.g. `/data` on Railway) so lead data survives redeploys. Defaults to `./data`. |
+| `DISPLAY_TZ` | Optional. IANA timezone (e.g. `America/New_York`) used for date display in the dashboard, so a UTC server doesn't show "tomorrow's" date. Defaults to `America/Denver`. |
+
+The public form endpoint (`POST /api/leads`) has basic abuse protection:
+a hidden honeypot field that silently drops bot submissions, per-field
+length caps, and a per-IP rate limit (5 submissions/minute). The dashboard
+also has a per-row **Remove** action for cleaning up any junk that gets
+through.
 
 ## How the nurture highlighting works
 

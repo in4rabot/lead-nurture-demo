@@ -15,6 +15,7 @@ interface FormState {
   email: string;
   phone: string;
   interest: string;
+  company: string; // honeypot — hidden from real users, bots auto-fill it
 }
 
 const INITIAL_STATE: FormState = {
@@ -22,6 +23,7 @@ const INITIAL_STATE: FormState = {
   email: "",
   phone: "",
   interest: INTERESTS[0],
+  company: "",
 };
 
 type SubmitStatus = "idle" | "loading" | "success" | "error";
@@ -49,6 +51,7 @@ export default function Home() {
           email: form.email,
           phone: form.phone || undefined,
           interest: form.interest,
+          company: form.company,
         }),
       });
 
@@ -104,6 +107,21 @@ export default function Home() {
               />
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+                <div
+                  aria-hidden="true"
+                  className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden"
+                >
+                  <label htmlFor="company">Company (leave this blank)</label>
+                  <input
+                    id="company"
+                    name="company"
+                    type="text"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={form.company}
+                    onChange={(e) => updateField("company", e.target.value)}
+                  />
+                </div>
                 <div>
                   <label
                     htmlFor="name"

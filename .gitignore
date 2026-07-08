@@ -49,3 +49,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI assistant scaffolding (local only, not part of the public portfolio repo)
+CLAUDE.md
+AGENTS.md

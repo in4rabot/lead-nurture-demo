@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Local/demo-only fallback credentials. These are used ONLY when
-// ADMIN_USER / ADMIN_PASSWORD are not set in the environment. In any real
-// deployment, set both env vars — do NOT rely on these defaults in production.
+// Local development fallback credentials, used ONLY when ADMIN_USER /
+// ADMIN_PASSWORD are unset AND the app is not running in production. In
+// production, missing env vars fail closed (every /admin request gets 401)
+// rather than falling back to credentials that live in a public repo.
 const FALLBACK_ADMIN_USER = "admin";
 const FALLBACK_ADMIN_PASSWORD = "Nurture#2026";
 
@@ -16,6 +17,12 @@ function unauthorized(): NextResponse {
 }
 
 export function middleware(request: NextRequest): NextResponse {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (isProduction && (!process.env.ADMIN_USER || !process.env.ADMIN_PASSWORD)) {
+    return unauthorized();
+  }
+
   const expectedUser = process.env.ADMIN_USER || FALLBACK_ADMIN_USER;
   const expectedPassword =
     process.env.ADMIN_PASSWORD || FALLBACK_ADMIN_PASSWORD;
