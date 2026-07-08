@@ -56,3 +56,6 @@ AGENTS.md
 
 # graphify (local code-graph tool, auto-generated analysis output)
 graphify-out/
+
+# local Claude Code session config (not part of the public portfolio repo)
+.claude/
